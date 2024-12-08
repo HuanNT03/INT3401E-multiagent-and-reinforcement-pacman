@@ -75,7 +75,29 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # Heursitics components
+        score = 0
+
+        newFoodPositions = newFood.asList() 
+        newFoodDistances = [manhattanDistance(newPos, foodPos) for foodPos in newFoodPositions]
+
+        newGhostPositions = [ghost.getPosition() for ghost in newGhostStates]
+        newGhostDistances = [manhattanDistance(newPos, ghostPos) for ghostPos in newGhostPositions]
+        closestGhost = min(newGhostDistances)
+        # ghostPenalty = sum(1 / distance if newScaredTimes[newGhostDistances.index(distance)] == 0 and distance > 0 else distance for distance in newGhostDistances)
+        
+        # If action is stop will reduce the score
+        if action == 'Stop':
+            score -= 50
+
+        if len(newFoodDistances) == 0:
+            return successorGameState.getScore() + score + closestGhost
+
+        closestFood = min(newFoodDistances) 
+        
+        score += (closestGhost / (closestFood * 10))
+
+        return successorGameState.getScore() + score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
