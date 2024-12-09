@@ -315,41 +315,31 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        def expectiMax(gameState, depth, agentID):
-            if depth == self.depth or gameState.isWin() or gameState.isLose():
-                return self.evaluationFunction(gameState)
-            if agentID == 0:
-                v = float('-inf')
-                if len(gameState.getLegalActions()) == 0:
-                    return self.evaluationFunction(gameState)
-                ac = Directions.STOP
-                for a in gameState.getLegalActions():
-                    s = expectiMax(gameState.generateSuccessor(0, a), depth, 1)
-                    if s > v:
-                        v = s
-                        ac = a
-                if depth == 0:
-                    return ac
+        numAgents = gameState.getNumAgents()
+
+        def expectimax(gameState, depth, agentIndex):
+            if gameState.isWin() or gameState.isLose() or (depth == self.depth and agentIndex == 0):
+                return None, self.evaluationFunction(gameState)
+
+            best_move = None
+            best_val = float("-inf") if agentIndex == 0 else 0
+
+            nextDepth = depth + 1 if agentIndex == (numAgents - 1) else depth
+
+            actions = gameState.getLegalActions(agentIndex)
+
+            for move in actions:
+                nextGameState = gameState.generateSuccessor(agentIndex, move)
+
+                _, next_val = expectimax(nextGameState, nextDepth, (agentIndex + 1) % numAgents)
+                if agentIndex == 0:
+                    if best_val < next_val:
+                        best_move, best_val = move, next_val
                 else:
-                    return v
-            else:
-                v = 0
-                if len(gameState.getLegalActions()) == 0:
-                    return self.evaluationFunction(gameState)
-                nextAgent = agentID + 1
-                if nextAgent == gameState.getNumAgents():
-                    nextAgent = 0
-                for a in gameState.getLegalActions(agentID):
-                    if nextAgent == 0:
-                        s = expectiMax(gameState.generateSuccessor(agentID, a), depth + 1, 0)
-                    else:
-                        s = expectiMax(gameState.generateSuccessor(agentID, a), depth, nextAgent)
+                    best_val += (1.0 / len(actions)) * next_val
+            return best_move, best_val
 
-                    p = 1 / len(gameState.getLegalActions(agentID))
-                    v += p * s
-                return v
-
-        return expectiMax(gameState, 0, 0)
+        return expectimax(gameState, 0, 0)[0]
 
 def betterEvaluationFunction(currentGameState: GameState):
     """
